@@ -19,13 +19,16 @@ class Browser:
         prefs = {"profile.default_content_setting_values.notifications": 2}
         chrome_options.add_experimental_option("prefs", prefs)
         if chrome:
-            self.device = webdriver.Chrome('/Users/gca/Documents/work/PATH/chromedriver', chrome_options=chrome_options)
+            self.device = webdriver.Chrome('G:\Work\PATH\chromedriver.exe', chrome_options=chrome_options)
         else:
             self.device = webdriver.Firefox()
 
     def goToFacebook(self):
         self.device.get('http://www.facebook.com')
         assert 'Facebook' in self.device.title
+
+    def goToFacebookEvent(self):
+        self.device.get('https://www.facebook.com/events/upcoming?action_history=null')
 
     def login(self, account, password):
         try:
@@ -38,7 +41,7 @@ class Browser:
             ele.send_keys(password)
             button = self.device.find_element_by_id('u_0_w')
             button.click()
-        except :
+        except:
             traceback.print_exc()
             self.device.close()
 
@@ -57,7 +60,7 @@ class Browser:
             button = self.device.find_element_by_css_selector('#feedx_container button')
             button.click()
 
-        except :
+        except:
             traceback.print_exc()
             self.device.quit()
 
@@ -86,7 +89,7 @@ class Browser:
             send_button.click()
             sleep(2)
 
-        except :
+        except:
             traceback.print_exc()
             self.device.quit()
 
@@ -124,91 +127,117 @@ class Browser:
                 EC.element_to_be_clickable((By.CSS_SELECTOR, '.layerCancel'))
             )
             close_button.click()
-        except :
+        except:
             traceback.print_exc()
             # browser.quit()
 
-    def PostComments(self, content):
+    def postComments(self, content):
         try:
-            element = WebDriverWait(self.device, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '.UFIInputContainer'))
-            )
-            element.click()
-            sleep(1)
-            element = self.device.find_elements_by_xpath("//*[@data-testid='ufi_comment_composer']")[0]
-            element.send_keys(content)
-            element.send_keys(Keys.ENTER)
-            element = WebDriverWait(self.device, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '.UFICommentBody span'))
-            )
-            assert content in element.text
-            # ele.send_keys("G:/Projects/SoftwareTestingHW#/image.gif")
-            # ele = browser.find_element_by_xpath("//*[@name='composer_photo[]']")
-
+            offset = 50000
+            for i in range(0, offset, 500):
+                self.device.execute_script("window.scrollTo(0," + str(i) + ")")
+                container = self.device.find_elements_by_css_selector('.userContentWrapper .UFIInputContainer')
+                if len(container) > 0 and container[0].is_displayed():
+                    container[0].click()
+                    sleep(1)
+                    input_composer = self.device.find_element_by_css_selector(
+                        ".userContentWrapper .UFIInputContainer div[data-testid='ufi_comment_composer']")
+                    input_composer.send_keys(content)
+                    input_composer.send_keys(Keys.ENTER)
+                    return
+                sleep(1)
         except Exception, e:
             traceback.print_exc()
             self.device.quit()
 
-    def EditComments(self, content):
+    def isPostComments(self, content):
+        offset = 50000
+        for i in range(0, offset, 500):
+            self.device.execute_script("window.scrollTo(0," + str(i) + ")")
+            element = self.device.find_element_by_css_selector(' .UFICommentBody span')
+            if content in element.text:
+                return True
+        return False
+
+    def editComments(self, name, content):
         try:
-            comment_block = WebDriverWait(self.device, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '.UFICommentContentBlock'))
-            )
-            hover = ActionChains(self.device).move_to_element(comment_block)
+            offset = 20000
+            for i in range(0, offset, 400):
+                self.device.execute_script("window.scrollTo(0," + str(i) + ")")
+                comment_block = self.device.find_elements_by_css_selector('.UFICommentContentBlock')
+                comments = self.device.find_elements_by_css_selector('.UFICommentContentBlock .UFICommentContent a')
+                for comment in comments:
+                    if comment.text == name and comment.is_displayed() and EC.element_to_be_clickable(comment):
+                        hover = ActionChains(self.device).move_to_element(comment_block[0])
+                        hover.perform()
+                        sleep(1)
+                        popup_button = self.device.find_element_by_css_selector('.UFICommentCloseButton')
+                        popup_button.click()
+                        sleep(1)
+                        edit_ele = self.device.find_element_by_xpath('//*[@data-testid="ufi_comment_menu_edit"]')
+                        edit_ele.click()
+                        sleep(1)
+                        input_comment = self.device.find_elements_by_xpath("//*[@data-testid='ufi_comment_composer']")[0]
+                        input_comment.send_keys(content)
+                        input_comment.send_keys(Keys.ENTER)
+                        return
+                sleep(1.5)
+        except Exception, e:
+            traceback.print_exc()
+            self.device.quit()
+
+
+
+    def deleteComments(self):
+        try:
+            comments = self.device.find_elements_by_css_selector('.UFICommentContentBlock .UFICommentContent a')
+            hover = ActionChains(self.device).move_to_element(comments[0])
             hover.perform()
             sleep(1)
             popup_button = self.device.find_element_by_css_selector('.UFICommentCloseButton')
             popup_button.click()
             sleep(1)
-            edit_ele = self.device.find_element_by_xpath('//*[@data-testid="ufi_comment_menu_edit"]')
-            edit_ele.click()
-            input_comment = browser.find_elements_by_xpath("//*[@data-testid='ufi_comment_composer']")[0]
-            input_comment.send_keys(content)
-            input_comment.send_keys(Keys.ENTER)
-            element = WebDriverWait(self.device, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '.UFICommentBody span'))
-            )
-            assert content in element.text
-        except Exception, e:
-            traceback.print_exc()
-            self.device.quit()
-
-    def DeleteComments(self):
-        try:
-            comment_block = WebDriverWait(self.device, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '.UFICommentContentBlock'))
-            )
-            hover = ActionChains(self.device).move_to_element(comment_block)
-            hover.perform()
-            sleep(1)
-            popup_button = self.device.find_element_by_css_selector('.UFICommentCloseButton')
-            popup_button.click()
-            sleep(1)
-            edit_ele = self.device.find_element_by_xpath('//*[@data-testid="ufi_comment_menu_delete"]')
-            edit_ele.click()
+            delete_ele = self.device.find_element_by_xpath('//*[@data-testid="ufi_comment_menu_delete"]')
+            delete_ele.click()
             sleep(2)
             confirm_button = self.device.find_element_by_css_selector('.layerConfirm.uiOverlayButton')
             confirm_button.click()
-            comment_blocks = browser.find_elements_by_css_selector('.UFICommentContentBlock')
-            assert len(comment_blocks) == 0
+
         except Exception, e:
             traceback.print_exc()
             self.device.quit()
 
-    def LikePosts(self, user):
+    def isDeletedComment(self):
+        comment_blocks = self.device.find_elements_by_css_selector('.UFICommentContentBlock')
+        return len(comment_blocks) == 0
+
+    def likePosts(self):
         try:
             like_button = WebDriverWait(self.device, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'a[data-testid="fb-ufi-likelink"]'))
             )
             like_button.click()
-            like_html_block = self.device.find_element_by_css_selector('.UFIRow').get_attribute('innerHTML')
-            assert user in like_html_block
-
         except Exception, e:
             traceback.print_exc()
             self.device.quit()
 
-    def SendMessage(self, content):
+    def unLikePosts(self):
+        try:
+            like_button = WebDriverWait(self.device, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'a[data-testid="fb-ufi-unlikelink"]'))
+            )
+            like_button.click()
+        except Exception, e:
+            traceback.print_exc()
+            self.device.quit()
+
+
+    def isLikePosts(self, user):
+        like_html_block = self.device.find_element_by_css_selector('.UFIRow').get_attribute('innerHTML')
+        assert user in like_html_block
+
+
+    def sendMessage(self, content):
         try:
             chat_button = self.device.find_element_by_css_selector('#fbDockChatBuddylistNub .fbNubButton')
             if chat_button.is_displayed():
@@ -223,13 +252,16 @@ class Browser:
             chat_block.click()
             chat_block.send_keys(content)
             chat_block.send_keys(Keys.ENTER)
-            conversation = self.device.find_element_by_css_selector('.conversation').get_attribute('innerHTML')
-            assert content in conversation
+
         except Exception, e:
             traceback.print_exc()
             self.device.quit()
 
-    def SendPhotoMessage(self, photo_url):
+    def isSendingMessage(self, content):
+        conversation = self.device.find_element_by_css_selector('.conversation').get_attribute('innerHTML')
+        return content in conversation
+
+    def sendPhotoMessage(self, photo_url):
         try:
             chat_button = self.device.find_element_by_css_selector('#fbDockChatBuddylistNub .fbNubButton')
             if chat_button.is_displayed():
@@ -238,27 +270,85 @@ class Browser:
                 EC.presence_of_element_located((By.CSS_SELECTOR, '.fbChatOrderedList ul li'))
             )
             chat_list.click()
+            sleep(2)
+
+
             chat_block = WebDriverWait(self.device, 5).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, '.fbNubFlyoutFooter div[role="textbox"]'))
             )
             chat_block.click()
-            # sleep(1)
-            # clicked_attachment = browser.find_element_by_css_selector('form[title="加新相片"] div')
-            # clicked_attachment.click()
-            # attachment = WebDriverWait(browser, 5).until(
-            #     EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="attachment[]"]'))
-            # )
+            sleep(1)
+            input_location = "//div[@class='fbNubFlyoutFooter']/div/div[2]/form/div/input[@type='file']"
+            script = "document.evaluate(\""+input_location+"\", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()"
+            self.device.execute_script(script=script)
             sleep(2)
             attachment = self.device.find_element_by_xpath('//*[@name="attachment[]"]')
             # browser.find_element_by_name('attachment[]').click(
-            # browser.find_element_by_css_selector('input.hidde)
             image_path = os.path.abspath(photo_url)
-            print image_path
-            attachment.clear()
-            attachment.send_keys("G:\\Game\\SoftwareTestingHW_3\\image.gif")
+            attachment.send_keys(image_path)
         except Exception, e:
             traceback.print_exc()
             # browser.quit()
+
+
+
+    def createEvent(self, title):
+        try:
+            create_event = WebDriverWait(self.device, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'a[data-testid="event-create-button"]'))
+            )
+            create_event.click()
+            event_name = WebDriverWait(self.device, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, '.uiLayer div[role="dialog"] input[type="text"]'))
+            )
+            event_name.send_keys(title)
+            confirm_button = self.device.find_element_by_css_selector('button.layerConfirm')
+            confirm_button.click()
+
+        except Exception, e:
+            traceback.print_exc()
+            self.device.quit()
+
+    def isCreatedEvent(self, title):
+        try:
+            event_list = self.device.find_element_by_css_selector('#event_header_info').get_attribute('innerHTML')
+            return title in event_list
+        except Exception, e:
+            traceback.print_exc()
+            self.device.quit()
+
+
+    def inviteFriend(self):
+        try:
+            invited_button = self.device.find_element_by_css_selector('#event_button_bar .fbEventClassicButton')
+            invited_button.click()
+            WebDriverWait(self.device, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, '.uiScrollableArea .uiGrid'))
+            )
+            invited_people = self.device.find_elements_by_css_selector('.uiScrollableArea .uiGrid')
+            for person in invited_people:
+                person.click()
+                sleep(0.2)
+            sleep(1)
+            confirm_button = self.device.find_element_by_css_selector('.layerConfirm.uiOverlayButton')
+            confirm_button.click()
+        except Exception, e:
+            traceback.print_exc()
+            self.device.quit()
+
+    def isInvitedFriend(self):
+        try:
+            invited_dialog = self.device.find_element_by_css_selector('td.vTop:nth-child(3) a')
+            invited_dialog.click()
+            WebDriverWait(self.device, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, '.className a'))
+            )
+            area =  self.device.find_elements_by_css_selector('.uiScrollableAreaContent > *')
+            return len(area) > 1
+
+        except Exception, e:
+            traceback.print_exc()
+            self.device.quit()
 
     def close(self):
         self.device.close()
