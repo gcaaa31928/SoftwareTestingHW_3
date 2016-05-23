@@ -30,6 +30,9 @@ class Browser:
     def goToFacebookEvent(self):
         self.device.get('https://www.facebook.com/events/upcoming?action_history=null')
 
+    def goToFacebookPhotoManagement(self):
+        self.device.get('https://www.facebook.com/se.taipeitech/allactivity?privacy_source=activity_log&log_filter=photos')
+
     def login(self, account, password):
         try:
             element = WebDriverWait(self.device, 10).until(
@@ -346,6 +349,23 @@ class Browser:
             area =  self.device.find_elements_by_css_selector('.uiScrollableAreaContent > *')
             return len(area) > 1
 
+        except Exception, e:
+            traceback.print_exc()
+            self.device.quit()
+
+    def deletePhotos(self):
+        try:
+            manage_button = WebDriverWait(self.device, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, 'a[data-tooltip-content="允許發佈在動態時報"]'))
+            )
+            manage_button.click()
+            sleep(2)
+            delete_button = self.device.find_element_by_css_selector('li.__MenuItem:nth-child(4) > a:nth-child(1)')
+            delete_button.click()
+            confirm_button = WebDriverWait(self.device, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, '.layerConfirm.uiOverlayButton'))
+            )
+            confirm_button.click()
         except Exception, e:
             traceback.print_exc()
             self.device.quit()
