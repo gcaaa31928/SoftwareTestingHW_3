@@ -1,3 +1,4 @@
+# !encoding=utf-8
 import os
 import traceback
 from time import sleep
@@ -13,8 +14,8 @@ from selenium.webdriver.support import expected_conditions as EC
 chrome_options = webdriver.ChromeOptions()
 prefs = {"profile.default_content_setting_values.notifications": 2}
 chrome_options.add_experimental_option("prefs", prefs)
-browser = webdriver.Chrome('G:\PATH\chromedriver.exe', chrome_options=chrome_options)
-
+browser = webdriver.Chrome('G:\Work\PATH\chromedriver.exe', chrome_options=chrome_options)
+# browser = webdriver.Firefox()
 def GoToFacebook():
     browser.get('http://www.facebook.com')
     assert 'Facebook' in browser.title
@@ -179,24 +180,79 @@ def DeleteComments():
         traceback.print_exc()
         browser.quit()
 
-def LikePosts():
+def LikePosts(user):
     try:
         like_button = WebDriverWait(browser, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'a[data-testid="fb-ufi-likelink"]'))
         )
         like_button.click()
+        like_html_block = browser.find_element_by_css_selector('.UFIRow').get_attribute('innerHTML')
+        assert user in like_html_block
 
     except Exception, e:
         traceback.print_exc()
         browser.quit()
 
+def SendMessage(content):
+    try:
+        chat_button = browser.find_element_by_css_selector('#fbDockChatBuddylistNub .fbNubButton')
+        if chat_button.is_displayed():
+            chat_button.click()
+        chat_list = WebDriverWait(browser, 5).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '.fbChatOrderedList ul li'))
+        )
+        chat_list.click()
+        chat_block = WebDriverWait(browser, 5).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '.fbNubFlyoutFooter div[role="textbox"]'))
+        )
+        chat_block.click()
+        chat_block.send_keys(content)
+        chat_block.send_keys(Keys.ENTER)
+        conversation = browser.find_element_by_css_selector('.conversation').get_attribute('innerHTML')
+        assert content in conversation
+    except Exception, e:
+        traceback.print_exc()
+        browser.quit()
+
+def SendPhotoMessage(photo_url):
+    try:
+        chat_button = browser.find_element_by_css_selector('#fbDockChatBuddylistNub .fbNubButton')
+        if chat_button.is_displayed():
+            chat_button.click()
+        chat_list = WebDriverWait(browser, 5).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '.fbChatOrderedList ul li'))
+        )
+        chat_list.click()
+        chat_block = WebDriverWait(browser, 5).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '.fbNubFlyoutFooter div[role="textbox"]'))
+        )
+        chat_block.click()
+        # sleep(1)
+        # clicked_attachment = browser.find_element_by_css_selector('form[title="加新相片"] div')
+        # clicked_attachment.click()
+        # attachment = WebDriverWait(browser, 5).until(
+        #     EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="attachment[]"]'))
+        # )
+        sleep(2)
+        attachment = browser.find_element_by_xpath('//*[@name="attachment[]"]')
+        # browser.find_element_by_name('attachment[]').click(
+        # browser.find_element_by_css_selector('input.hidde)
+        image_path = os.path.abspath(photo_url)
+        print image_path
+        attachment.clear()
+        attachment.send_keys("G:\\Game\\SoftwareTestingHW_3\\image.gif")
+    except Exception, e:
+        traceback.print_exc()
+        # browser.quit()
+
 
 GoToFacebook()
 Login('taipeitechse@gmail.com', 'selab1623')
-CreateStory('tested for cliu ya selab !!' + str(time.time()))
-LikePosts()
+# CreateStory('tested for cliu ya selab !!' + str(time.time()))
+# LikePosts('SE TaipeiTech')
 # UploadImageStory('image.gif', 'yap, suck you know')
 # UploadVideoStory('video.mp4', 'yap, suck you know')
 # PostComments('hell')
 # EditComments('hell god editting')
 # DeleteComments()
+SendPhotoMessage('image.gif')
