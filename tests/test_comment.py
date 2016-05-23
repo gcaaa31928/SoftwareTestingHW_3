@@ -16,7 +16,7 @@ class TestComment(unittest.TestCase):
 
     def test_like(self):
         self.driver.likePosts()
-        time.sleep(2)
+        time.sleep(3)
         assert self.driver.isLikePosts('SE TaipeiTech')
 
     def test_unlike(self):
@@ -26,6 +26,12 @@ class TestComment(unittest.TestCase):
         time.sleep(2)
         assert not self.driver.isLikePosts('SE TaipeiTech')
 
+    def test_share(self):
+        timestamp = time.time()
+        self.driver.sharePost('ya, just share it ' + str(timestamp))
+        self.driver.goToProfile()
+        time.sleep(3)
+        assert self.driver.isStoryCreated('ya, just share it ' + str(timestamp))
 
     def tearDown(self):
         self.driver.close()

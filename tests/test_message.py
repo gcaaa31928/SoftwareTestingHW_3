@@ -20,7 +20,7 @@ class TestMessage(unittest.TestCase):
 
     def test_send_photo(self):
         timestamp = str(time.time())
-        self.driver.sendPhotoMessage('image.gif')
+        self.driver.sendPhotoMessage('../image.gif')
         time.sleep(8)
 
     def tearDown(self):

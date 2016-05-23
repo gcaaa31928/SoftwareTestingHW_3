@@ -19,7 +19,7 @@ class Browser:
         prefs = {"profile.default_content_setting_values.notifications": 2}
         chrome_options.add_experimental_option("prefs", prefs)
         if chrome:
-            self.device = webdriver.Chrome('G:\Work\PATH\chromedriver.exe', chrome_options=chrome_options)
+            self.device = webdriver.Chrome('G:\PATH\chromedriver.exe', chrome_options=chrome_options)
         else:
             self.device = webdriver.Firefox()
 
@@ -32,6 +32,9 @@ class Browser:
 
     def goToFacebookPhotoManagement(self):
         self.device.get('https://www.facebook.com/se.taipeitech/allactivity?privacy_source=activity_log&log_filter=photos')
+
+    def goToProfile(self):
+        self.device.get('https://www.facebook.com/se.taipeitech')
 
     def login(self, account, password):
         try:
@@ -236,8 +239,11 @@ class Browser:
 
 
     def isLikePosts(self, user):
-        like_html_block = self.device.find_element_by_css_selector('.UFIRow').get_attribute('innerHTML')
-        assert user in like_html_block
+        like_html_block = self.device.find_elements_by_css_selector('.UFIRow.UFILikeSentence')
+        if len(like_html_block) == 0:
+            return False
+        html = like_html_block[0].get_attribute('innerHTML')
+        return user in html
 
 
     def sendMessage(self, content):
@@ -288,6 +294,7 @@ class Browser:
             attachment = self.device.find_element_by_xpath('//*[@name="attachment[]"]')
             # browser.find_element_by_name('attachment[]').click(
             image_path = os.path.abspath(photo_url)
+            print image_path
             attachment.send_keys(image_path)
         except Exception, e:
             traceback.print_exc()
@@ -366,6 +373,31 @@ class Browser:
                 EC.visibility_of_element_located((By.CSS_SELECTOR, '.layerConfirm.uiOverlayButton'))
             )
             confirm_button.click()
+        except Exception, e:
+            traceback.print_exc()
+            self.device.quit()
+
+    def sharePost(self, content):
+        try:
+            share_button = WebDriverWait(self.device, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, '.share_action_link'))
+            )
+            share_button.click()
+            sleep(2)
+            share_post_button = WebDriverWait(self.device, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.uiLayer:not(.hidden_elem) .__MenuItem:nth-child(2)'))
+            )
+            share_post_button.click()
+            input_content = WebDriverWait(self.device, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, '.uiLayer:not(.hidden_elem) div[contenteditable="true"]'))
+            )
+            input_content.send_keys(content)
+            post_button = self.device.find_element_by_css_selector('.uiLayer:not(.hidden_elem) button:nth-child(2)')
+            post_button.click()
+            sleep(2)
+            click = ActionChains(self.device).click()
+            click.perform()
+            # self.device.find_element_by_css_selector('div').click()
         except Exception, e:
             traceback.print_exc()
             self.device.quit()
